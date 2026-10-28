@@ -32,6 +32,26 @@
 
 html { scroll-behavior: smooth; }
 
+/* anchor targets clear the sticky header */
+[id] { scroll-margin-top: 4.6rem; }
+
+/* red-ink selection — highlight on carbon paper */
+::selection { background: var(--red); color: var(--bg); }
+
+/* hairline reading wire, under the very top edge */
+.progress-wire {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--red);
+  box-shadow: 0 0 6px var(--glow);
+  z-index: 60;
+  pointer-events: none;
+  transition: width .15s linear;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);
@@ -41,7 +61,9 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   transition: background .5s ease, color .5s ease;
+  animation: pagein 1s ease both;
 }
+@keyframes pagein { from { opacity: 0; } to { opacity: 1; } }
 
 /* ambient dot-field + grain, like old dithered screens */
 body::before {
@@ -122,6 +144,7 @@ nav {
   align-items: center;
 }
 nav a {
+  position: relative;
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: .74rem;
   letter-spacing: .22em;
@@ -131,14 +154,20 @@ nav a {
   transition: color .2s;
 }
 nav a:hover, nav a[aria-current="page"] { color: var(--ink); }
-nav a[aria-current="page"]::after {
+nav a::after {
   content: "";
-  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
   height: 1px;
-  margin-top: 3px;
   background: var(--red);
   box-shadow: 0 0 6px var(--glow);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .35s ease;
 }
+nav a:hover::after, nav a[aria-current="page"]::after { transform: scaleX(1); }
 
 #themeToggle {
   background: none;
@@ -183,7 +212,7 @@ pre.ascii .red {
   text-shadow: 0 0 10px var(--glow), 0 0 26px var(--glow);
   animation: breathe 3.4s ease-in-out infinite;
 }
-pre.ascii .dim { color: var(--dim); }
+pre.ascii .dim { color: var(--dim); animation: breathe 6.4s ease-in-out infinite; }
 pre.ascii .faint { color: var(--faint); }
 
 @keyframes breathe {
@@ -217,13 +246,14 @@ pre.ascii span.glitch { color: var(--red); }
 
 /* ── neon sign headline ── */
 .hero h1.neon {
-  font-family: "DotGothic16", ui-monospace, monospace;
+  font-family: "Monoton", "DotGothic16", ui-monospace, monospace;
   font-weight: 400;
   font-size: clamp(2.4rem, 12.5vw, 7.4rem);
-  letter-spacing: .12em;
+  letter-spacing: .06em;
   color: var(--red);
   white-space: nowrap;
 }
+.neon span { display: inline-block; }
 .neon span {
   text-shadow:
     0 0 7px var(--glow),
@@ -268,9 +298,9 @@ pre.ascii span.glitch { color: var(--red); }
   display: flex;
   flex-direction: column;
   gap: .8rem;
-  transition: background .25s;
+  transition: background .25s, transform .3s ease;
 }
-.card:hover { background: var(--bg-2); }
+.card:hover { background: var(--bg-2); transform: translateY(-2px); }
 
 .card .kicker { font-size: .62rem; }
 .card h3 { font-size: 1.05rem; line-height: 1.35; }
@@ -280,8 +310,9 @@ pre.ascii span.glitch { color: var(--red); }
   font-size: .68rem;
   letter-spacing: .25em;
   color: var(--ink);
+  transition: transform .25s ease;
 }
-.card:hover .more { color: var(--red); text-shadow: 0 0 8px var(--glow); }
+.card:hover .more { color: var(--red); text-shadow: 0 0 8px var(--glow); transform: translateX(5px); }
 
 /* ── precepts ── */
 .precept {
@@ -310,11 +341,12 @@ article p { margin-bottom: 1.4rem; color: inherit; }
 article p.lead { font-size: 1.12rem; color: var(--ink); }
 article p.body { color: var(--dim); }
 article blockquote {
-  border-left: 2px solid var(--red);
+  border-left: 2px solid var(--red-dim);
   padding: .4rem 0 .4rem 1.4rem;
   margin: 2.2rem 0;
   color: var(--ink);
   font-style: italic;
+  transition: border-color .4s ease, text-shadow .4s ease;
 }
 article blockquote .who {
   display: block;
@@ -325,7 +357,9 @@ article blockquote .who {
   font-style: normal;
   color: var(--dim);
 }
-article .divider { text-align: center; color: var(--faint); margin: 2.4rem 0; }
+article blockquote:hover { border-color: var(--red); text-shadow: 0 0 12px var(--glow); }
+article .divider { text-align: center; color: var(--faint); margin: 2.4rem 0; animation: divpulse 5.2s ease-in-out infinite; }
+@keyframes divpulse { 0%, 100% { opacity: .55; } 50% { opacity: .95; } }
 
 .back {
   display: inline-block;
@@ -409,6 +443,33 @@ footer {
 }
 .foot-cols a:hover { color: var(--ink); }
 
+/* the Watcher drifts even when nobody moves the mouse */
+@keyframes footsway {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: -5px -3px; }
+}
+.foot-art pre.ascii { animation: footsway 9s ease-in-out infinite; }
+
+/* kanji footnotes — hover any 気 for its meaning */
+.ktip { position: relative; cursor: help; }
+.ktip:hover::after, .ktip:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .58rem;
+  letter-spacing: .18em;
+  padding: .5rem .7rem;
+  white-space: nowrap;
+  z-index: 80;
+}
+.ktip:focus-visible { outline: 1px dotted var(--red); outline-offset: 2px; }
+
 /* the Watcher, dithered against the bottom-right — Fluxyn-frame */
 .foot-art {
   position: absolute;
@@ -417,6 +478,8 @@ footer {
   z-index: 1;
   pointer-events: none;
   opacity: .45;
+  transition: translate 1.4s cubic-bezier(.22, .61, .36, 1);
+  translate: 0 0;
 }
 .foot-art pre.ascii {
   font-size: clamp(.3rem, .85vw, .78rem);
@@ -448,6 +511,24 @@ footer {
 
 .pagehead { text-align: center; padding: 3.4rem 0 0; }
 .pagehead p { color: var(--dim); max-width: 30rem; margin: .9rem auto 0; font-size: .92rem; }
+
+/* ── motion (opted in by JS only when the visitor allows it) ── */
+.motion .reveal {
+  opacity: 0;
+  translate: 0 16px;
+  transition:
+    opacity .9s cubic-bezier(.22, .61, .36, 1),
+    translate .9s cubic-bezier(.22, .61, .36, 1);
+}
+.motion .reveal.in { opacity: 1; translate: 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
 
 @media (max-width: 700px) {
   header { padding: .75rem 1.1rem; flex-wrap: wrap; row-gap: .55rem; }
