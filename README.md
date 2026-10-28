@@ -1,2 +1,2 @@
-# kiazaki 1.5 ascii
+# kiazaki-lite
 kzk 1.5
